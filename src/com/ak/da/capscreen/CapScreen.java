@@ -5,7 +5,6 @@
  */
 package com.ak.da.capscreen;
 
-import com.sun.java.swing.plaf.windows.WindowsTreeUI;
 import java.awt.Dimension;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
@@ -14,8 +13,6 @@ import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -40,8 +37,8 @@ public class CapScreen extends Application {
         //scene
         Scene scene = new Scene(root, 100, 100);
         
-        javafx.scene.shape.Rectangle rect = 
-                new javafx.scene.shape.Rectangle(100, 100);
+//        javafx.scene.shape.Rectangle rect = 
+//                new javafx.scene.shape.Rectangle(100, 100);
         
         Button btnShot = new Button("Shot");
         btnShot.setOnAction(new EventHandler<ActionEvent>() {
@@ -60,7 +57,20 @@ public class CapScreen extends Application {
         primaryStage.setTitle("CapScreen");
         primaryStage.setScene(scene);
         primaryStage.show();
+        
+        
+        
     }
+
+    @Override
+    public void stop() throws Exception {
+        super.stop(); //To change body of generated methods, choose Tools | Templates.
+        System.exit(0);
+    }
+    
+    
+    
+    
     
     /**
      * capture function
