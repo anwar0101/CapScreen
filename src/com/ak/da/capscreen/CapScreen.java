@@ -55,6 +55,8 @@ public class CapScreen extends Application {
             }
         });
         
+        root.getChildren().add(btnShot);
+        
         primaryStage.setTitle("CapScreen");
         primaryStage.setScene(scene);
         primaryStage.show();
