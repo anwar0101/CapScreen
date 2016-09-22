@@ -58,8 +58,6 @@ public class CapScreen extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
         
-        
-        
     }
 
     @Override

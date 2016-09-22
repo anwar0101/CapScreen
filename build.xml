@@ -60,8 +60,8 @@
           <fx:resources>
               <fx:fileset dir="${basedir}/${dist.dir}"
                           includes="*.jar"/>
-              <fx:fileset dir="${basedir}/${dist.dir}/lib"
-                          includes="*.jar"/>
+              <fx:fileset dir="${basedir}/${dist.dir}"
+                          includes="lib/*.jar"/>
           </fx:resources>
           <fx:info title="${application.title}" 
                    vendor="${application.vendor}"/>
