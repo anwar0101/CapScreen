@@ -206,18 +206,12 @@ public class CapScreen extends Application {
             }
 
 
-            stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-                @Override
-                public void handle(WindowEvent t) {
-                    hide(stage);
-                }
+            stage.setOnCloseRequest((WindowEvent t) -> {
+                hide(stage);
             });
             // create a action listener to listen for default action executed on the tray icon
-            final ActionListener closeListener = new ActionListener() {
-                @Override
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    System.exit(0);
-                }
+            final ActionListener closeListener = (java.awt.event.ActionEvent e) -> {
+                System.exit(0);
             };
 
             ActionListener showListener = new ActionListener() {
@@ -302,6 +296,10 @@ public class CapScreen extends Application {
             
             Button btnMinimize = new Button("-");
             
+            
+            btnMinimize.setOnAction((ActionEvent event) -> {
+                CapScreen.priStage.setIconified(true);
+            });
             
             Text title = new Text("CapScreen");
             
