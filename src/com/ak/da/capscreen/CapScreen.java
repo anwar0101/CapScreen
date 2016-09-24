@@ -9,6 +9,7 @@ import java.awt.AWTException;
 import java.awt.Dimension;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.Image;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.Rectangle;
@@ -19,7 +20,6 @@ import java.awt.TrayIcon;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -51,6 +51,7 @@ public class CapScreen extends Application {
     
     private boolean firstTime;
     private TrayIcon trayIcon;
+    private String lastDir;
     
     @Override
     public void start(Stage primaryStage) {
@@ -77,15 +78,19 @@ public class CapScreen extends Application {
         });
         
         BorderPane borderPane = new BorderPane();
-        //borderPane.setStyle("-fx-background-color: green;");
-
+//        borderPane.setStyle("-fx-background-color: green;");
+        
+        Text title = new Text("CapScreen");
+        
         ToolBar toolBar = new ToolBar();
-
+        
         int height = 25;
         toolBar.setPrefHeight(height);
         toolBar.setMinHeight(height);
         toolBar.setMaxHeight(height);
         toolBar.setPrefWidth(200);
+        
+        toolBar.getItems().add(title);
         toolBar.getItems().add(new WindowButtons());
 
         borderPane.setTop(toolBar);
@@ -94,19 +99,15 @@ public class CapScreen extends Application {
         
         
         //when mouse button is pressed, save the initial position of screen
-        root.setOnMousePressed(new EventHandler<MouseEvent>() {
-            public void handle(MouseEvent me) {
-                initX = me.getScreenX() - primaryStage.getX();
-                initY = me.getScreenY() - primaryStage.getY();
-            }
+        root.setOnMousePressed((MouseEvent me) -> {
+            initX = me.getScreenX() - primaryStage.getX();
+            initY = me.getScreenY() - primaryStage.getY();
         });
 
         //when screen is dragged, translate it accordingly
-        root.setOnMouseDragged(new EventHandler<MouseEvent>() {
-            public void handle(MouseEvent me) {
-                primaryStage.setX(me.getScreenX() - initX);
-                primaryStage.setY(me.getScreenY() - initY);
-            }
+        root.setOnMouseDragged((MouseEvent me) -> {
+            primaryStage.setX(me.getScreenX() - initX);
+            primaryStage.setY(me.getScreenY() - initY);
         });
         
         //when mouse button is pressed, save the initial position of screen
@@ -118,11 +119,9 @@ public class CapScreen extends Application {
         });
 
         //when screen is dragged, translate it accordingly
-        toolBar.setOnMouseDragged(new EventHandler<MouseEvent>() {
-            public void handle(MouseEvent me) {
-                primaryStage.setX(me.getScreenX() - initX);
-                primaryStage.setY(me.getScreenY() - initY);
-            }
+        toolBar.setOnMouseDragged((MouseEvent me) -> {
+            primaryStage.setX(me.getScreenX() - initX);
+            primaryStage.setY(me.getScreenY() - initY);
         });
         
         
@@ -185,10 +184,14 @@ public class CapScreen extends Application {
      */
     private File saveImage(){
         FileChooser chooser = new FileChooser();
-        chooser.setInitialFileName("shot");
+        chooser.setInitialFileName("shot.png");
         chooser.setTitle("Save File");
-        
-        return chooser.showSaveDialog(priStage);
+//        if(lastDir != null){
+//            chooser.setInitialDirectory(new File(lastDir));
+//        }
+        File file = chooser.showSaveDialog(priStage);
+        //lastDir = file.getPath();
+        return file;
     }
     
     
@@ -199,7 +202,8 @@ public class CapScreen extends Application {
             // load an image
             java.awt.Image image = null;
             image =
-                    new ImageIcon(CapScreen.class.getResource("icon128.png")).getImage();
+                    new ImageIcon(CapScreen.class.getResource("capscreen.png"))
+                            .getImage().getScaledInstance(15, 15, Image.SCALE_DEFAULT);
              
             stage.setOnCloseRequest((WindowEvent t) -> {
                 hide(stage);
@@ -296,9 +300,8 @@ public class CapScreen extends Application {
                 CapScreen.priStage.setIconified(true);
             });
             
-            Text title = new Text("CapScreen");
             
-            this.getChildren().addAll(title, btnMinimize, closeBtn);
+            this.getChildren().addAll(btnMinimize, closeBtn);
             this.setSpacing(5);
         }
         
