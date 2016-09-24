@@ -20,7 +20,6 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -38,6 +37,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.WindowEvent;
 import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import jhook.Keyboard;
 
 /**
@@ -198,14 +198,9 @@ public class CapScreen extends Application {
             SystemTray tray = SystemTray.getSystemTray();
             // load an image
             java.awt.Image image = null;
-            try {
-                URL url = new URL("http://www.digitalphotoartistry.com/rose1.jpg");
-                image = ImageIO.read(url);
-            } catch (IOException ex) {
-                System.out.println(ex);
-            }
-
-
+            image =
+                    new ImageIcon(CapScreen.class.getResource("icon128.png")).getImage();
+             
             stage.setOnCloseRequest((WindowEvent t) -> {
                 hide(stage);
             });
