@@ -24,21 +24,30 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ToolBar;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.text.Text;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.media.AudioClip;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.WindowEvent;
+import javafx.util.Duration;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import jhook.Keyboard;
+import tray.animations.AnimationType;
+import tray.notification.NotificationType;
+import tray.notification.TrayNotification;
 
 /**
  *
@@ -48,17 +57,16 @@ public class CapScreen extends Application {
     public static Stage priStage;
     private double initX;
     private double initY;
-    
-    private boolean firstTime;
     private TrayIcon trayIcon;
     private String lastDir;
+    
+    private static final AudioClip ALERT_AUDIOCLIP = new AudioClip(CapScreen.class.getResource("snap.wav").toString());
     
     @Override
     public void start(Stage primaryStage) {
         primaryStage.initStyle(StageStyle.UNDECORATED);
         
         createTrayIcon(primaryStage);
-        firstTime = true;
         Platform.setImplicitExit(false);
         
         
@@ -66,9 +74,10 @@ public class CapScreen extends Application {
         //root group
         Group root = new Group();
         //scene
-        Scene scene = new Scene(root, 200, 50);
+        Scene scene = new Scene(root, 200, 54);
         
-        Button btnShot = new Button("Shot");
+        Button btnShot = new Button("",
+                new ImageView(new javafx.scene.image.Image(CapScreen.class.getResourceAsStream("icon128.png"), 15, 15, false, false)));
         btnShot.setOnAction((ActionEvent event) -> {
             try {
                 captureScreen();
@@ -80,8 +89,13 @@ public class CapScreen extends Application {
         BorderPane borderPane = new BorderPane();
 //        borderPane.setStyle("-fx-background-color: green;");
         
-        Text title = new Text("CapScreen");
+        Label title = new Label("CapScreen");
+        ImageView imgView = new ImageView(
+                new javafx.scene.image.Image(CapScreen.class.getResourceAsStream("capscreen.png"), 15, 15, false, false));
         
+        title.setGraphic(imgView);
+        title.setGraphicTextGap(2);
+        HBox hbox = new HBox(title);
         ToolBar toolBar = new ToolBar();
         
         int height = 25;
@@ -90,7 +104,10 @@ public class CapScreen extends Application {
         toolBar.setMaxHeight(height);
         toolBar.setPrefWidth(200);
         
-        toolBar.getItems().add(title);
+        toolBar.getItems().add(hbox);
+        Pane pane = new Pane();
+        HBox.setHgrow(pane, Priority.ALWAYS);
+        toolBar.getItems().add(pane);
         toolBar.getItems().add(new WindowButtons());
 
         borderPane.setTop(toolBar);
@@ -129,7 +146,7 @@ public class CapScreen extends Application {
         allContent.setMaxHeight(25);
         allContent.setPrefHeight(25);
         allContent.setPrefWidth(200);
-        
+        allContent.setPadding(new Insets(2, 10, 2, 10));
         borderPane.setBottom(allContent);
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -141,8 +158,8 @@ public class CapScreen extends Application {
                     try {
                         Platform.runLater(() -> {
                             try {
+                                CapScreen.ALERT_AUDIOCLIP.play();
                                 captureScreen();
-                                System.out.println("Saved.");
                             } catch (Exception ex) {
                                 //error log
                             }
@@ -185,12 +202,16 @@ public class CapScreen extends Application {
     private File saveImage(){
         FileChooser chooser = new FileChooser();
         chooser.setInitialFileName("shot.png");
+        chooser.getExtensionFilters()
+                .add(new FileChooser.ExtensionFilter("PNG Image", "*.png"));
         chooser.setTitle("Save File");
-//        if(lastDir != null){
-//            chooser.setInitialDirectory(new File(lastDir));
-//        }
+        if(lastDir != null){
+            chooser.setInitialDirectory(new File(lastDir));
+        } else {
+            chooser.setInitialDirectory(new File(System.getProperty("user.home")));
+        }
         File file = chooser.showSaveDialog(priStage);
-        //lastDir = file.getPath();
+        lastDir = file.getParent();
         return file;
     }
     
@@ -251,10 +272,17 @@ public class CapScreen extends Application {
     }
     
     public void showProgramIsMinimizedMsg() {
+        TrayNotification tray =
+                new TrayNotification("CapScreen", "CapScreen minimized in System Tray.", NotificationType.SUCCESS);
+        tray.setAnimationType(AnimationType.POPUP);
+        tray.showAndDismiss(Duration.seconds(5));
         
-        trayIcon.displayMessage("CapScreen is minimized.",
-                    "Some other message.",
-                    TrayIcon.MessageType.INFO);
+        final Runnable runnable = (Runnable) Toolkit.getDefaultToolkit().getDesktopProperty("win.sound.minimized");
+
+        if (runnable != null) {
+            runnable.run();
+        }
+        
     }
     
     private void hide(final Stage stage) {
@@ -291,6 +319,7 @@ public class CapScreen extends Application {
             
             closeBtn.setOnAction((ActionEvent event) -> {
                 CapScreen.priStage.close();
+                showProgramIsMinimizedMsg();
             });
             
             Button btnMinimize = new Button("-");
