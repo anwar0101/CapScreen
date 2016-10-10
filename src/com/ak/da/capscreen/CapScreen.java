@@ -20,6 +20,9 @@ import java.awt.TrayIcon;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -59,6 +62,8 @@ public class CapScreen extends Application {
     private double initY;
     private TrayIcon trayIcon;
     private String lastDir;
+    private boolean isRandom = false;
+    private boolean isCombine = false;
     
     private static final AudioClip ALERT_AUDIOCLIP = new AudioClip(CapScreen.class.getResource("snap.wav").toString());
     
@@ -154,21 +159,47 @@ public class CapScreen extends Application {
         Keyboard kb = new Keyboard();
         kb.addListener((boolean keyDown, int vk) -> {
             if(keyDown){
+                
                 if(vk == 44){
-                    try {
-                        Platform.runLater(() -> {
-                            try {
-                                CapScreen.ALERT_AUDIOCLIP.play();
-                                captureScreen();
-                            } catch (Exception ex) {
-                                //error log
-                            }
-                        });
-                    } catch (Exception ex) {
-                        //error
+                    if(isCombine){
+                        isRandom = true;
+                        try {
+                            Platform.runLater(() -> {
+                                try {
+                                    CapScreen.ALERT_AUDIOCLIP.play();
+                                    captureScreen();
+                                } catch (Exception ex) {
+                                    //error log
+                                }
+                            });
+                        } catch (Exception ex) {
+                            //error
+                        }
+                    } else {
+                        isRandom = false;
+                        try {
+                            Platform.runLater(() -> {
+                                try {
+                                    CapScreen.ALERT_AUDIOCLIP.play();
+                                    captureScreen();
+                                } catch (Exception ex) {
+                                    //error log
+                                }
+                            });
+                        } catch (Exception ex) {
+                            //error
+                        }
                     }
                 }
+                
+                if(vk == 16 || vk == 160){
+                    isCombine = true;
+                } else {
+                    isCombine = false;
+                }
+                
                 System.out.println("keypress: " + vk);
+                
             }
             
         });
@@ -187,8 +218,12 @@ public class CapScreen extends Application {
         Robot robot = new Robot(screen);
         Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
         BufferedImage img = robot.createScreenCapture(new Rectangle(0, 0, d.width, d.height));
-        File file = saveImage();
-        
+        File file;
+        if(isRandom){
+            file = saveWithRandom();
+        } else {
+            file = saveImage();
+        }
         if(file != null){
             ImageIO.write(img, "png", file);
         } else {
@@ -201,7 +236,7 @@ public class CapScreen extends Application {
      */
     private File saveImage(){
         FileChooser chooser = new FileChooser();
-        chooser.setInitialFileName("shot.png");
+        chooser.setInitialFileName("capscreen.png");
         chooser.getExtensionFilters()
                 .add(new FileChooser.ExtensionFilter("PNG Image", "*.png"));
         chooser.setTitle("Save File");
@@ -213,6 +248,20 @@ public class CapScreen extends Application {
         File file = chooser.showSaveDialog(priStage);
         lastDir = file.getParent();
         return file;
+    }
+    
+    private File saveWithRandom(){
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
+        Date date = Calendar.getInstance().getTime();
+        String randomName = sdf.format(date);
+        String fileName = System.getProperty("user.home") 
+                + "\\CapScreen\\" + randomName + ".png";
+        File file = new File(fileName);
+        if(!file.getParentFile().exists()){
+            file.getParentFile().mkdirs();
+        }
+       return file;
+        
     }
     
     
