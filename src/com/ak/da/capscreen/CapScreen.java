@@ -21,8 +21,10 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -34,7 +36,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DataFormat;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -64,8 +70,46 @@ public class CapScreen extends Application {
     private String lastDir;
     private boolean isRandom = false;
     private boolean isCombine = false;
+    private History history = new History();
+    private HBox historyPanel;
+    private HBox allContent;
     
     private static final AudioClip ALERT_AUDIOCLIP = new AudioClip(CapScreen.class.getResource("snap.wav").toString());
+    private ImageView filesIcon;
+    
+    private HBox historyGenerate(){
+        HBox hbox = new HBox();
+        for(File f: history.getFiles()){
+            if(filesIcon == null){
+                filesIcon = new ImageView(
+                new javafx.scene.image.Image(CapScreen.class.getResourceAsStream("image.png"), 20, 20, false, false));
+            }
+            
+            if(f != null && filesIcon != null){
+                Label label = new Label("",filesIcon);
+                label.setOnDragDetected(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        /* drag was detected, start a drag-and-drop gesture*/
+                        /* allow any transfer mode */
+                        Dragboard db = label.startDragAndDrop(TransferMode.ANY);
+
+                        /* Put a string on a dragboard */
+                        ClipboardContent content = new ClipboardContent();
+                        File file = history.getLastOne();
+                        List<File> files = new ArrayList<>();
+                        files.add(file);
+                        content.putFiles(files);
+                        db.setContent(content);
+
+                        event.consume();
+                    }
+                });
+                hbox.getChildren().add(label);
+            }
+        }
+        return hbox;
+    }
     
     @Override
     public void start(Stage primaryStage) {
@@ -73,7 +117,6 @@ public class CapScreen extends Application {
         
         createTrayIcon(primaryStage);
         Platform.setImplicitExit(false);
-        
         
         CapScreen.priStage = primaryStage;
         //root group
@@ -85,6 +128,7 @@ public class CapScreen extends Application {
                 new ImageView(new javafx.scene.image.Image(CapScreen.class.getResourceAsStream("icon128.png"), 15, 15, false, false)));
         btnShot.setOnAction((ActionEvent event) -> {
             try {
+                CapScreen.ALERT_AUDIOCLIP.play();
                 captureScreen();
             } catch (Exception ex) {
                 //
@@ -121,18 +165,6 @@ public class CapScreen extends Application {
         
         
         //when mouse button is pressed, save the initial position of screen
-        root.setOnMousePressed((MouseEvent me) -> {
-            initX = me.getScreenX() - primaryStage.getX();
-            initY = me.getScreenY() - primaryStage.getY();
-        });
-
-        //when screen is dragged, translate it accordingly
-        root.setOnMouseDragged((MouseEvent me) -> {
-            primaryStage.setX(me.getScreenX() - initX);
-            primaryStage.setY(me.getScreenY() - initY);
-        });
-        
-        //when mouse button is pressed, save the initial position of screen
         toolBar.setOnMousePressed(new EventHandler<MouseEvent>() {
             public void handle(MouseEvent me) {
                 initX = me.getScreenX() - primaryStage.getX();
@@ -147,7 +179,9 @@ public class CapScreen extends Application {
         });
         
         
-        HBox allContent = new HBox(btnShot);
+        historyPanel = historyGenerate();
+        
+        allContent = new HBox(btnShot, historyPanel);
         allContent.setMaxHeight(25);
         allContent.setPrefHeight(25);
         allContent.setPrefWidth(200);
@@ -226,6 +260,15 @@ public class CapScreen extends Application {
         }
         if(file != null){
             ImageIO.write(img, "png", file);
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    allContent.getChildren().remove(historyPanel);
+                    history.setLastOne(file);
+                    historyPanel = historyGenerate();
+                    allContent.getChildren().add(historyPanel);
+                }
+            });
         } else {
             System.out.println("file not saved.");
         }
